@@ -16,20 +16,27 @@ const FIREBASE_CONFIG = {
 
 const USE_FIREBASE = true;
 
-// Initialize Firebase & Cloud Firestore
+// Initialize Firebase, Cloud Firestore & Cloud Auth
 var db = null;
+var auth = null;
 if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) {
       firebase.initializeApp(FIREBASE_CONFIG);
     }
-    db = firebase.firestore();
-    try {
-      db.enablePersistence({ synchronizeTabs: true }).catch(function() {});
-    } catch (e) {}
-    console.log("✓ Google Cloud Firestore connected & initialized");
+    if (firebase.firestore) {
+      db = firebase.firestore();
+      try {
+        db.enablePersistence({ synchronizeTabs: true }).catch(function() {});
+      } catch (e) {}
+      console.log("✓ Google Cloud Firestore connected & initialized");
+    }
+    if (firebase.auth) {
+      auth = firebase.auth();
+      console.log("✓ Google Cloud Authentication connected & initialized");
+    }
   } catch (err) {
-    console.warn("Firestore connection warning:", err);
+    console.warn("Firebase connection warning:", err);
   }
 }
 

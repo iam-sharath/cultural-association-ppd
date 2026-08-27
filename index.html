@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- Google Firebase 10 SDK (App + Firestore + Official Auth) -->
+  <!-- Google Firebase 10 SDK (App + Official Auth + Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
@@ -420,20 +420,27 @@ const FIREBASE_CONFIG = {
 };
 const USE_FIREBASE = true;
 var db = null;
+var auth = null;
 if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) {
       firebase.initializeApp(FIREBASE_CONFIG);
     }
-    db = firebase.firestore();
-    try {
-      db.enablePersistence({ synchronizeTabs: true }).catch(function() {
-      });
-    } catch (e) {
+    if (firebase.firestore) {
+      db = firebase.firestore();
+      try {
+        db.enablePersistence({ synchronizeTabs: true }).catch(function() {
+        });
+      } catch (e) {
+      }
+      console.log("\u2713 Google Cloud Firestore connected & initialized");
     }
-    console.log("\u2713 Google Cloud Firestore connected & initialized");
+    if (firebase.auth) {
+      auth = firebase.auth();
+      console.log("\u2713 Google Cloud Authentication connected & initialized");
+    }
   } catch (err) {
-    console.warn("Firestore connection warning:", err);
+    console.warn("Firebase connection warning:", err);
   }
 }
 const COMMUNITY_NAME = "Praneeth Pranav Daffodils Financial Portal";

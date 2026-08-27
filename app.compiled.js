@@ -10,20 +10,27 @@ const FIREBASE_CONFIG = {
 };
 const USE_FIREBASE = true;
 var db = null;
+var auth = null;
 if (typeof firebase !== "undefined") {
   try {
     if (!firebase.apps.length) {
       firebase.initializeApp(FIREBASE_CONFIG);
     }
-    db = firebase.firestore();
-    try {
-      db.enablePersistence({ synchronizeTabs: true }).catch(function() {
-      });
-    } catch (e) {
+    if (firebase.firestore) {
+      db = firebase.firestore();
+      try {
+        db.enablePersistence({ synchronizeTabs: true }).catch(function() {
+        });
+      } catch (e) {
+      }
+      console.log("\u2713 Google Cloud Firestore connected & initialized");
     }
-    console.log("\u2713 Google Cloud Firestore connected & initialized");
+    if (firebase.auth) {
+      auth = firebase.auth();
+      console.log("\u2713 Google Cloud Authentication connected & initialized");
+    }
   } catch (err) {
-    console.warn("Firestore connection warning:", err);
+    console.warn("Firebase connection warning:", err);
   }
 }
 const COMMUNITY_NAME = "Praneeth Pranav Daffodils Financial Portal";
