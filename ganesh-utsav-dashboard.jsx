@@ -1779,10 +1779,10 @@ function App() {
   // ── Session Auto-Logout on 15 Minutes Inactivity ───────────
   const handleIdleLogout = useCallback(() => {
     if (role) {
-      updateRole(null);
+      handleLogout();
       setLoginError("Session timed out due to 15 minutes of inactivity. Please sign in again.");
     }
-  }, [role, updateRole]);
+  }, [role, handleLogout]);
   useIdleTimer(handleIdleLogout, 15 * 60 * 1000);
 
   // ── Lockout Timer Countdown ────────────────────────────────

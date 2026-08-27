@@ -1706,10 +1706,10 @@ function App() {
   const isArchived = activeFestival?.status === "archived";
   const handleIdleLogout = useCallback(() => {
     if (role) {
-      updateRole(null);
+      handleLogout();
       setLoginError("Session timed out due to 15 minutes of inactivity. Please sign in again.");
     }
-  }, [role, updateRole]);
+  }, [role, handleLogout]);
   useIdleTimer(handleIdleLogout, 15 * 60 * 1e3);
   useEffect(() => {
     if (lockoutTime > 0) {
