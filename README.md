@@ -17,16 +17,27 @@ A high-performance, real-time community financial accounting portal and festival
 * **🔒 Enterprise Role-Based Access Control**:
   * **Admin**: Full control, delete/edit rights, multi-year festival management, custom categories.
   * **Cashier**: High-speed gate entry mode (add collections/expenses only).
-  * **Security**: Brute-force defense lockout and browser password manager (Google Autofill) integration.
+  * **Security**: Official Google Cloud Authentication (JWT tokens, zero passwords in code), brute-force defense lockout, and browser password manager (Google Autofill) integration.
 
 ---
 
 ## 🛠️ Technology Stack
 
 * **Frontend**: React 18 (Standalone Compiled Bundle), Modern CSS3 / Glassmorphism
-* **Backend Database**: Google Cloud Firestore (Real-Time WebSockets)
+* **Cloud Authentication**: Google Firebase Authentication (Signed Cloud JWT Tokens)
+* **Backend Database**: Google Cloud Firestore (Real-Time WebSockets & Offline Cache)
 * **Hosting**: Google Firebase Hosting (Global CDN, SSL Encrypted)
 * **Build Tooling**: esbuild & Node.js
+* **Testing & QA**: Puppeteer (Headless Chromium E2E Automation)
+
+---
+
+## 🔒 Security Architecture
+
+1. **Zero Passwords in Code**: No cleartext credentials, salts, or hashes are stored in the frontend codebase or Git repository. Authentication is delegated directly to Google Cloud.
+2. **Cloud JWT Tokens**: Client sessions are verified using cryptographically signed JSON Web Tokens issued by Google Authentication servers.
+3. **HTTP Referrer Restrictions**: Firebase API keys are restricted to authorized production domains (`cultural-association-ppd.web.app`) in Google Cloud Console.
+4. **Session Management**: Session persistence across page reloads with auto-logout on 15 minutes of inactivity.
 
 ---
 
@@ -45,5 +56,6 @@ npx firebase-tools deploy --only hosting
 
 ---
 
-## 📜 License
-Distributed under the MIT License. Developed for Cultural Association — Praneeth Pranav Daffodils.
+## 📜 Ownership & License
+© 2026 Cultural Association — Praneeth Pranav Daffodils. All Rights Reserved.  
+Proprietary software developed for the official administration of Praneeth Pranav Daffodils Community.
