@@ -144,8 +144,8 @@ async function sha256Hex(text) {
 // 'admin123' + salt -> 7e9351fa56ce303d8dca8bc51b0337c76891ee202f5a89476eb330559f27c3ea
 // 'cash123'  + salt -> 0a724b17bfbfaaa8baec46c1ae3b956041c2c31e6b8c8d8f074d0e515ee36b44
 const DEFAULT_ACCOUNT_HASHES = {
-  admin: "e422db5fdfc8e96ee97c1e369bc5d816b6c20bba2d6d09e58b398ca4e3b38468",
-  cashier: "ba7e198f536e12aa57da06b41c2c85a67647688eb0a99aedda9eabd23b9ea9ca",
+  admin: "c5565391341b95d16358229d48d1b2308ffae26211651504dc04ebed20a0a19d",
+  cashier: "c5b6a0f0f0c661384cf9988dccb8cafb928798d35be99503bba3ffc1e217f38d",
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -1807,8 +1807,8 @@ function App() {
     }
 
     const hashed = await sha256Hex(p);
-    const isAdmin = (r === "admin" || u.toLowerCase() === "admin") && u.toLowerCase() === "admin" && (p === "admin123" || hashed === DEFAULT_ACCOUNT_HASHES.admin);
-    const isCashier = (r === "cashier" || u.toLowerCase() === "cashier") && u.toLowerCase() === "cashier" && (p === "cash123" || hashed === DEFAULT_ACCOUNT_HASHES.cashier);
+    const isAdmin = (r === "admin" || u.toLowerCase() === "ppdadmin2026") && u.toLowerCase() === "ppdadmin2026" && (p === "admin@2026" || hashed === DEFAULT_ACCOUNT_HASHES.admin);
+    const isCashier = (r === "cashier" || u.toLowerCase() === "ppdcashier2026") && u.toLowerCase() === "ppdcashier2026" && (p === "cashier@2026" || hashed === DEFAULT_ACCOUNT_HASHES.cashier);
 
     if (isAdmin) {
       updateRole("admin");
