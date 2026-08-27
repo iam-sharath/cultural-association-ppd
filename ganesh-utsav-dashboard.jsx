@@ -102,31 +102,7 @@ const INITIAL_FLATS = generateCommunityFlats();
 const INITIAL_COLLECTIONS = [];
 const INITIAL_EXPENDITURES = [];
 
-// Optional sample data template for testing
-const SAMPLE_MOCK_DATA = {
-  festivals: [
-    { id: "f2024", year: 2024, name: "Cultural Association 2024", startDate: "2024-09-07", endDate: "2024-09-13", status: "archived" },
-    { id: "f2025", year: 2025, name: "Cultural Association 2025", startDate: "2025-08-27", endDate: "2025-09-02", status: "archived" },
-    { id: "f2026", year: 2026, name: "Cultural Association 2026", startDate: "2026-08-22", endDate: "2026-08-28", status: "active" },
-  ],
-  flats: [
-    { id: "fl1", blockId: "A", flatNumber: "A-101", residentName: "Ramesh Kumar", active: true },
-    { id: "fl2", blockId: "A", flatNumber: "A-102", residentName: "Suresh Rao", active: true },
-    { id: "fl3", blockId: "A", flatNumber: "A-103", residentName: "Anil Sharma", active: true },
-    { id: "fl4", blockId: "B", flatNumber: "B-101", residentName: "Vijay Menon", active: true },
-    { id: "fl5", blockId: "B", flatNumber: "B-102", residentName: "Sunita Joshi", active: true },
-    { id: "fl6", blockId: "C", flatNumber: "C-101", residentName: "Rahul Verma", active: true },
-  ],
-  collections: [
-    { id: "c1", festivalId: "f2026", flatId: "fl1", blockId: "A", residentName: "Ramesh Kumar", flatNumber: "A-101", amount: 1000, date: "2026-08-22", paymentMethod: "UPI", status: "paid", notes: "" },
-    { id: "c2", festivalId: "f2026", flatId: "fl4", blockId: "B", residentName: "Vijay Menon", flatNumber: "B-101", amount: 1000, date: "2026-08-22", paymentMethod: "Cash", status: "paid", notes: "" },
-    { id: "c3", festivalId: "f2026", flatId: "fl6", blockId: "C", residentName: "Rahul Verma", flatNumber: "C-101", amount: 1500, date: "2026-08-23", paymentMethod: "UPI", status: "paid", notes: "" },
-  ],
-  expenditures: [
-    { id: "e1", festivalId: "f2026", date: "2026-08-22", paidFor: "Ganesh Idol", category: "Ganesh Idol", amount: 8000, paidTo: "Sri Ganesh Idols", paymentMethod: "Cash", notes: "" },
-    { id: "e2", festivalId: "f2026", date: "2026-08-22", paidFor: "Mandap Decoration", category: "Decoration", amount: 5000, paidTo: "Decorators", paymentMethod: "UPI", notes: "" },
-  ]
-};
+
 
 // ════════════════════════════════════════════════════════════════
 // SECURITY: OFFICIAL GOOGLE CLOUD AUTHENTICATION (0 Passwords in Code)
@@ -3227,32 +3203,22 @@ function App() {
           <Btn onClick={() => setShowAddFestival(true)}>+ Add New Festival Year</Btn>
           <Btn variant="secondary" onClick={() => setShowAddCategory(true)}>+ Add Expense Category</Btn>
           <Btn
-            variant="secondary"
-            onClick={() => {
-              if (window.confirm("Load sample demo data for testing?")) {
-                setFestivals(SAMPLE_MOCK_DATA.festivals);
-                setFlats(SAMPLE_MOCK_DATA.flats);
-                setCollections(SAMPLE_MOCK_DATA.collections);
-                setExpenditures(SAMPLE_MOCK_DATA.expenditures);
-                setActiveFestivalId("f2026");
-              }
-            }}
-          >
-            📥 Load Sample Data
-          </Btn>
-          <Btn
             variant="danger"
             onClick={() => {
-              if (window.confirm("Are you sure you want to clear all data and start with an empty ledger?")) {
+              if (window.confirm("Are you sure you want to reset and start with an empty community ledger?")) {
                 setFestivals(INITIAL_FESTIVALS);
                 setFlats(generateCommunityFlats());
                 setCollections([]);
                 setExpenditures([]);
                 setActiveFestivalId("f2026");
+                if (db) {
+                  // Clean Firestore collections
+                  INITIAL_FESTIVALS.forEach(f => db.collection("festivals").doc(f.id).set(f).catch(() => {}));
+                }
               }
             }}
           >
-            🗑️ Clear All (Reset Empty)
+            🗑️ Reset Community Ledger
           </Btn>
         </div>
       </div>

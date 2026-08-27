@@ -81,30 +81,6 @@ function generateCommunityFlats() {
 const INITIAL_FLATS = generateCommunityFlats();
 const INITIAL_COLLECTIONS = [];
 const INITIAL_EXPENDITURES = [];
-const SAMPLE_MOCK_DATA = {
-  festivals: [
-    { id: "f2024", year: 2024, name: "Cultural Association 2024", startDate: "2024-09-07", endDate: "2024-09-13", status: "archived" },
-    { id: "f2025", year: 2025, name: "Cultural Association 2025", startDate: "2025-08-27", endDate: "2025-09-02", status: "archived" },
-    { id: "f2026", year: 2026, name: "Cultural Association 2026", startDate: "2026-08-22", endDate: "2026-08-28", status: "active" }
-  ],
-  flats: [
-    { id: "fl1", blockId: "A", flatNumber: "A-101", residentName: "Ramesh Kumar", active: true },
-    { id: "fl2", blockId: "A", flatNumber: "A-102", residentName: "Suresh Rao", active: true },
-    { id: "fl3", blockId: "A", flatNumber: "A-103", residentName: "Anil Sharma", active: true },
-    { id: "fl4", blockId: "B", flatNumber: "B-101", residentName: "Vijay Menon", active: true },
-    { id: "fl5", blockId: "B", flatNumber: "B-102", residentName: "Sunita Joshi", active: true },
-    { id: "fl6", blockId: "C", flatNumber: "C-101", residentName: "Rahul Verma", active: true }
-  ],
-  collections: [
-    { id: "c1", festivalId: "f2026", flatId: "fl1", blockId: "A", residentName: "Ramesh Kumar", flatNumber: "A-101", amount: 1e3, date: "2026-08-22", paymentMethod: "UPI", status: "paid", notes: "" },
-    { id: "c2", festivalId: "f2026", flatId: "fl4", blockId: "B", residentName: "Vijay Menon", flatNumber: "B-101", amount: 1e3, date: "2026-08-22", paymentMethod: "Cash", status: "paid", notes: "" },
-    { id: "c3", festivalId: "f2026", flatId: "fl6", blockId: "C", residentName: "Rahul Verma", flatNumber: "C-101", amount: 1500, date: "2026-08-23", paymentMethod: "UPI", status: "paid", notes: "" }
-  ],
-  expenditures: [
-    { id: "e1", festivalId: "f2026", date: "2026-08-22", paidFor: "Ganesh Idol", category: "Ganesh Idol", amount: 8e3, paidTo: "Sri Ganesh Idols", paymentMethod: "Cash", notes: "" },
-    { id: "e2", festivalId: "f2026", date: "2026-08-22", paidFor: "Mandap Decoration", category: "Decoration", amount: 5e3, paidTo: "Decorators", paymentMethod: "UPI", notes: "" }
-  ]
-};
 function sanitizeHtml(str) {
   if (str === null || str === void 0) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -2034,33 +2010,22 @@ function App() {
   const renderSettings = () => /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", borderRadius: 16, padding: 24, border: "1.5px solid #f1f5f9", marginBottom: 20 } }, /* @__PURE__ */ React.createElement("h3", { style: { margin: "0 0 16px", fontSize: 16, fontWeight: 800, color: "#0f172a" } }, "\u2699\uFE0F Community & Festival Setup"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: "#64748b", marginBottom: 18 } }, "Community Name: ", /* @__PURE__ */ React.createElement("strong", null, COMMUNITY_NAME), " \xB7 Blocks: ", /* @__PURE__ */ React.createElement("strong", null, "A, B, C")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(Btn, { onClick: () => setShowAddFestival(true) }, "+ Add New Festival Year"), /* @__PURE__ */ React.createElement(Btn, { variant: "secondary", onClick: () => setShowAddCategory(true) }, "+ Add Expense Category"), /* @__PURE__ */ React.createElement(
     Btn,
     {
-      variant: "secondary",
-      onClick: () => {
-        if (window.confirm("Load sample demo data for testing?")) {
-          setFestivals(SAMPLE_MOCK_DATA.festivals);
-          setFlats(SAMPLE_MOCK_DATA.flats);
-          setCollections(SAMPLE_MOCK_DATA.collections);
-          setExpenditures(SAMPLE_MOCK_DATA.expenditures);
-          setActiveFestivalId("f2026");
-        }
-      }
-    },
-    "\u{1F4E5} Load Sample Data"
-  ), /* @__PURE__ */ React.createElement(
-    Btn,
-    {
       variant: "danger",
       onClick: () => {
-        if (window.confirm("Are you sure you want to clear all data and start with an empty ledger?")) {
+        if (window.confirm("Are you sure you want to reset and start with an empty community ledger?")) {
           setFestivals(INITIAL_FESTIVALS);
           setFlats(generateCommunityFlats());
           setCollections([]);
           setExpenditures([]);
           setActiveFestivalId("f2026");
+          if (db) {
+            INITIAL_FESTIVALS.forEach((f) => db.collection("festivals").doc(f.id).set(f).catch(() => {
+            }));
+          }
         }
       }
     },
-    "\u{1F5D1}\uFE0F Clear All (Reset Empty)"
+    "\u{1F5D1}\uFE0F Reset Community Ledger"
   ))), /* @__PURE__ */ React.createElement("div", { style: { background: "#fff", borderRadius: 16, padding: 24, border: "1.5px solid #f1f5f9", marginBottom: 20 } }, /* @__PURE__ */ React.createElement("h3", { style: { margin: "0 0 16px", fontSize: 16, fontWeight: 800, color: "#0f172a" } }, "\u{1F3F7}\uFE0F Expense Categories (", categories.length, ")"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, categories.map((c, i) => /* @__PURE__ */ React.createElement("span", { key: i, style: { background: "#f8fafc", border: "1px solid #e2e8f0", padding: "6px 12px", borderRadius: 20, fontSize: 12, fontWeight: 700, color: "#334155" } }, c)))), /* @__PURE__ */ React.createElement("div", { style: { background: "#f8fafc", borderRadius: 16, padding: 24, border: "1.5px solid #e2e8f0" } }, /* @__PURE__ */ React.createElement("h3", { style: { margin: "0 0 12px", fontSize: 15, fontWeight: 800, color: "#0f172a" } }, "\u{1F512} Security & Session Status"), /* @__PURE__ */ React.createElement("ul", { style: { margin: 0, paddingLeft: 18, fontSize: 13, color: "#475569", lineHeight: 1.8 } }, /* @__PURE__ */ React.createElement("li", null, "Signed in as: ", /* @__PURE__ */ React.createElement("strong", null, role?.toUpperCase())), /* @__PURE__ */ React.createElement("li", null, "Inactivity Auto-Logout: ", /* @__PURE__ */ React.createElement("strong", null, "Enabled (15 mins idle timer)")), /* @__PURE__ */ React.createElement("li", null, "Password Hashing: ", /* @__PURE__ */ React.createElement("strong", null, "Salted SHA-256 (Web Crypto API)")), /* @__PURE__ */ React.createElement("li", null, "Injection Defense: ", /* @__PURE__ */ React.createElement("strong", null, "CSV DDE Neutralization & DOM Sanitization active")))));
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "\u{1F3E0}" },
