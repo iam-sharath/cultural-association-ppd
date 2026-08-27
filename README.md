@@ -30,31 +30,6 @@ A high-performance, real-time community financial accounting portal and festival
 * **Build Tooling**: esbuild & Node.js
 * **Testing & QA**: Puppeteer (Headless Chromium E2E Automation)
 
----
-
-## 🔒 Security Architecture
-
-1. **Zero Passwords in Code**: No cleartext credentials, salts, or hashes are stored in the frontend codebase or Git repository. Authentication is delegated directly to Google Cloud.
-2. **Cloud JWT Tokens**: Client sessions are verified using cryptographically signed JSON Web Tokens issued by Google Authentication servers.
-3. **HTTP Referrer Restrictions**: Firebase API keys are restricted to authorized production domains (`cultural-association-ppd.web.app`) in Google Cloud Console.
-4. **Session Management**: Session persistence across page reloads with auto-logout on 15 minutes of inactivity.
-
----
-
-## 🚀 Quick Setup & Deployment
-
-```bash
-# 1. Clone repository
-git clone https://github.com/iam-sharath/cultural-association-ppd.git
-
-# 2. Open project directory
-cd cultural-association-ppd
-
-# 3. Deploy updates to Firebase Hosting
-npx firebase-tools deploy --only hosting
-```
-
----
 
 ## 📜 Ownership & License
 © 2026 Cultural Association — Praneeth Pranav Daffodils. All Rights Reserved.  
