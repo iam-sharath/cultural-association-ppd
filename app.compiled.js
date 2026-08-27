@@ -1303,9 +1303,12 @@ function App() {
   }, [lockoutTime]);
   const handleLogin = async (customRole, customUser, customPass) => {
     setLoginError("");
-    const r = customRole || loginForm.role;
-    const u = (customUser !== void 0 ? customUser : loginForm.username).trim();
-    const p = customPass !== void 0 ? customPass : loginForm.password;
+    const domRole = typeof document !== "undefined" ? document.getElementById("role")?.value : "admin";
+    const domUser = typeof document !== "undefined" ? document.getElementById("username")?.value : "";
+    const domPass = typeof document !== "undefined" ? document.getElementById("password")?.value : "";
+    const r = customRole || loginForm.role || domRole || "admin";
+    const u = (customUser !== void 0 ? customUser : loginForm.username || domUser || "").trim();
+    const p = customPass !== void 0 ? customPass : loginForm.password || domPass || "";
     if (!u || !p) {
       setLoginError("Please enter both username and password.");
       return;

@@ -1797,9 +1797,13 @@ function App() {
     // ── Secure Login Handler ───────────────────────────────────────
   const handleLogin = async (customRole, customUser, customPass) => {
     setLoginError("");
-    const r = customRole || loginForm.role;
-    const u = (customUser !== undefined ? customUser : loginForm.username).trim();
-    const p = customPass !== undefined ? customPass : loginForm.password;
+    const domRole = typeof document !== "undefined" ? document.getElementById("role")?.value : "admin";
+    const domUser = typeof document !== "undefined" ? document.getElementById("username")?.value : "";
+    const domPass = typeof document !== "undefined" ? document.getElementById("password")?.value : "";
+
+    const r = customRole || loginForm.role || domRole || "admin";
+    const u = (customUser !== undefined ? customUser : (loginForm.username || domUser || "")).trim();
+    const p = customPass !== undefined ? customPass : (loginForm.password || domPass || "");
 
     if (!u || !p) {
       setLoginError("Please enter both username and password.");
