@@ -1822,10 +1822,16 @@ function App() {
     setLoginLoading(true);
 
     try {
-      // Auto-format email if user just types 'admin' or 'cashier'
+      // Support short usernames (e.g. admin, ppdadmin2026, cashier) or full email
       let emailToAuth = u;
       if (!emailToAuth.includes("@")) {
-        emailToAuth = emailToAuth.toLowerCase().includes("admin") ? "admin@ppd.com" : "cashier@ppd.com";
+        if (emailToAuth.toLowerCase().includes("admin")) {
+          emailToAuth = "admin@ppd.com";
+        } else if (emailToAuth.toLowerCase().includes("cashier")) {
+          emailToAuth = "cashier@ppd.com";
+        } else {
+          emailToAuth = `${emailToAuth}@ppd.com`;
+        }
       }
 
       const cred = await auth.signInWithEmailAndPassword(emailToAuth, p);
@@ -2188,7 +2194,7 @@ function App() {
                 name="username"
                 type="text"
                 autoComplete="username"
-                placeholder="admin@ppd.com or cashier@ppd.com"
+                placeholder="Enter username"
                 value={loginForm.username}
                 onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                 required
