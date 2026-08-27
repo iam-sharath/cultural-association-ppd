@@ -98,24 +98,6 @@ const SAMPLE_MOCK_DATA = {
     { id: "e2", festivalId: "f2026", date: "2026-08-22", paidFor: "Mandap Decoration", category: "Decoration", amount: 5e3, paidTo: "Decorators", paymentMethod: "UPI", notes: "" }
   ]
 };
-const PASSWORD_SALT = "ganesh_utsav_community_salt_v2";
-async function sha256Hex(text) {
-  if (!crypto || !crypto.subtle) {
-    let hash = 0;
-    for (let i = 0; i < text.length; i++) {
-      hash = (hash << 5) - hash + text.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(16);
-  }
-  const enc = new TextEncoder();
-  const buffer = await crypto.subtle.digest("SHA-256", enc.encode(text + PASSWORD_SALT));
-  return Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-const DEFAULT_ACCOUNT_HASHES = {
-  admin: "c5565391341b95d16358229d48d1b2308ffae26211651504dc04ebed20a0a19d",
-  cashier: "c5b6a0f0f0c661384cf9988dccb8cafb928798d35be99503bba3ffc1e217f38d"
-};
 function sanitizeHtml(str) {
   if (str === null || str === void 0) return "";
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -1117,27 +1099,51 @@ const PrintReport = ({ festival, calc, onClose }) => {
 function App() {
   const [role, setRole] = useState(() => {
     try {
-      return sessionStorage.getItem("ppd_session_role") || localStorage.getItem("ppd_session_role") || null;
+      return sessionStorage.getItem("ppd_session_role") || null;
     } catch (e) {
       return null;
     }
   });
+  const [authUser, setAuthUser] = useState(null);
   const [page, setPage] = useState("dashboard");
-  const updateRole = useCallback((newRole) => {
-    setRole(newRole);
-    try {
-      if (newRole) {
-        sessionStorage.setItem("ppd_session_role", newRole);
-        localStorage.setItem("ppd_session_role", newRole);
+  useEffect(() => {
+    if (!auth) return;
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user && user.email) {
+        setAuthUser(user);
+        const derivedRole = user.email.toLowerCase().includes("admin") ? "admin" : "cashier";
+        setRole(derivedRole);
+        try {
+          sessionStorage.setItem("ppd_session_role", derivedRole);
+        } catch (e) {
+        }
       } else {
-        sessionStorage.removeItem("ppd_session_role");
-        localStorage.removeItem("ppd_session_role");
+        setAuthUser(null);
+        setRole(null);
+        try {
+          sessionStorage.removeItem("ppd_session_role");
+        } catch (e) {
+        }
       }
+    });
+    return () => unsubscribe();
+  }, []);
+  const handleLogout = useCallback(async () => {
+    try {
+      if (auth) await auth.signOut();
+    } catch (e) {
+    }
+    setRole(null);
+    setAuthUser(null);
+    try {
+      sessionStorage.removeItem("ppd_session_role");
+      localStorage.removeItem("ppd_session_role");
     } catch (e) {
     }
   }, []);
   const [loginForm, setLoginForm] = useState({ username: "", password: "", role: "admin" });
   const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(0);
   const [festivals, setFestivals] = useState(() => {
@@ -1303,36 +1309,46 @@ function App() {
   }, [lockoutTime]);
   const handleLogin = async (customRole, customUser, customPass) => {
     setLoginError("");
-    const domRole = typeof document !== "undefined" ? document.getElementById("role")?.value : "admin";
     const domUser = typeof document !== "undefined" ? document.getElementById("username")?.value : "";
     const domPass = typeof document !== "undefined" ? document.getElementById("password")?.value : "";
-    const r = customRole || loginForm.role || domRole || "admin";
     const u = (customUser !== void 0 ? customUser : loginForm.username || domUser || "").trim();
     const p = customPass !== void 0 ? customPass : loginForm.password || domPass || "";
     if (!u || !p) {
-      setLoginError("Please enter both username and password.");
+      setLoginError("Please enter both username/email and password.");
       return;
     }
-    const hashed = await sha256Hex(p);
-    const isAdmin = (r === "admin" || u.toLowerCase() === "ppdadmin2026") && u.toLowerCase() === "ppdadmin2026" && (p === "admin@2026" || hashed === DEFAULT_ACCOUNT_HASHES.admin);
-    const isCashier = (r === "cashier" || u.toLowerCase() === "ppdcashier2026") && u.toLowerCase() === "ppdcashier2026" && (p === "cashier@2026" || hashed === DEFAULT_ACCOUNT_HASHES.cashier);
-    if (isAdmin) {
-      updateRole("admin");
+    if (!auth) {
+      setLoginError("Firebase Auth is connecting. Please wait a moment.");
+      return;
+    }
+    setLoginLoading(true);
+    try {
+      let emailToAuth = u;
+      if (!emailToAuth.includes("@")) {
+        emailToAuth = emailToAuth.toLowerCase().includes("admin") ? "admin@ppd.com" : "cashier@ppd.com";
+      }
+      const cred = await auth.signInWithEmailAndPassword(emailToAuth, p);
+      const user = cred.user;
+      const derivedRole = user.email.toLowerCase().includes("admin") ? "admin" : "cashier";
+      setRole(derivedRole);
       setLoginAttempts(0);
       setLockoutTime(0);
-    } else if (isCashier) {
-      updateRole("cashier");
-      setLoginAttempts(0);
-      setLockoutTime(0);
-    } else {
+    } catch (err) {
+      console.warn("Cloud Auth Error:", err.code, err.message);
       const nextAttempts = loginAttempts + 1;
       setLoginAttempts(nextAttempts);
       if (nextAttempts >= 5) {
         setLockoutTime(30);
         setLoginError("Too many failed attempts. Login locked for 30 seconds.");
+      } else if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+        setLoginError(`Invalid Cloud Credentials. ${5 - nextAttempts} attempt(s) remaining.`);
+      } else if (err.code === "auth/too-many-requests") {
+        setLoginError("Account temporarily locked by Google Cloud for security. Please try again in 1 minute.");
       } else {
-        setLoginError(`Invalid credentials. ${5 - nextAttempts} attempt(s) remaining.`);
+        setLoginError(err.message || "Failed to sign in. Please verify your credentials.");
       }
+    } finally {
+      setLoginLoading(false);
     }
   };
   const calc = useMemo(() => {
@@ -1632,7 +1648,7 @@ function App() {
           name: "username",
           type: "text",
           autoComplete: "username",
-          placeholder: "Enter username",
+          placeholder: "admin@ppd.com or cashier@ppd.com",
           value: loginForm.username,
           onChange: (e) => setLoginForm({ ...loginForm, username: e.target.value }),
           required: true
@@ -1658,7 +1674,7 @@ function App() {
           style: { width: "100%", padding: "14px", fontSize: 15, marginTop: 10, borderRadius: 12 },
           disabled: lockoutTime > 0
         },
-        lockoutTime > 0 ? `Locked (${lockoutTime}s)` : "Secure Sign In \u2192"
+        loginLoading ? "Verifying with Google Cloud..." : lockoutTime > 0 ? `Locked (${lockoutTime}s)` : "Secure Cloud Sign In \u2192"
       )
     ), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 24, paddingTop: 16, borderTop: "1px solid #f1f5f9", textAlign: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 } }, "\u{1F512} ", /* @__PURE__ */ React.createElement("span", null, "Encrypted Session \xB7 Official Portal")))));
   }
@@ -2119,7 +2135,7 @@ function App() {
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16 } }, item.icon),
       /* @__PURE__ */ React.createElement("span", null, item.label)
     ))
-  )), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#fef08a", fontWeight: 800, background: "rgba(0,0,0,0.2)", padding: "4px 8px", borderRadius: 8 } }, role?.toUpperCase()), /* @__PURE__ */ React.createElement(Btn, { variant: "secondary", style: { padding: "5px 10px", fontSize: 12 }, onClick: () => updateRole(null) }, "Logout")), /* @__PURE__ */ React.createElement(
+  )), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#fef08a", fontWeight: 800, background: "rgba(0,0,0,0.2)", padding: "4px 8px", borderRadius: 8 } }, role?.toUpperCase()), /* @__PURE__ */ React.createElement(Btn, { variant: "secondary", style: { padding: "5px 10px", fontSize: 12 }, onClick: handleLogout }, "Logout")), /* @__PURE__ */ React.createElement(
     "button",
     {
       className: "mobile-menu-btn",
@@ -2340,7 +2356,7 @@ function App() {
           variant: "danger",
           style: { flex: 1, padding: "8px", fontSize: 11, borderRadius: 10 },
           onClick: () => {
-            updateRole(null);
+            handleLogout();
             setMobileMenuOpen(false);
           }
         },
